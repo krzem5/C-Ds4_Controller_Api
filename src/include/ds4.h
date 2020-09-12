@@ -1,3 +1,4 @@
+#include <windows.h>
 #include <stdint.h>
 #include <limits.h>
 #include <signal.h>
@@ -45,20 +46,31 @@ enum BUTTON{
 
 
 struct DS4Device{
-	bool e;
-	uint32_t b;
+	uint8_t fc;
+	uint32_t dt;
+	uint32_t btn;
 	uint8_t l2;
 	uint8_t r2;
-	int16_t lx;
-	int16_t ly;
-	int16_t rx;
-	int16_t ry;
-	float ax;
-	float ay;
-	float az;
-	float gx;
-	float gy;
-	float gz;
+	int8_t lx;
+	int8_t ly;
+	int8_t rx;
+	int8_t ry;
+	uint8_t bt;
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
+	uint8_t fr;
+	uint8_t sr;
+	uint8_t fon;
+	uint8_t foff;
+	HANDLE _fh;
+	char* _ib;
+	char* _ob;
+	uint8_t _f;
+	uint64_t _uc;
+	OVERLAPPED _o;
+	LARGE_INTEGER _lt;
+	LARGE_INTEGER _tf;
 };
 
 
@@ -82,7 +94,7 @@ struct DS4DeviceList* DS4_find_all(void);
 
 
 
-void DS4_free_list(struct DS4DeviceList*);
+void DS4_free_list(struct DS4DeviceList* l);
 
 
 
@@ -90,4 +102,12 @@ struct DS4Device* DS4_connect(char* p);
 
 
 
-bool DS4_close(struct DS4Device* d);
+void DS4_update(struct DS4Device* d);
+
+
+
+void DS4_hsl(struct DS4Device* d,uint8_t h,uint8_t s,uint8_t l);
+
+
+
+void DS4_close(struct DS4Device* d);
