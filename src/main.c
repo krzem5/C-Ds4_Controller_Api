@@ -13,7 +13,9 @@ int main(int argc,const char** argv){
 		DS4_update(d);
 		t+=d->dt;
 		printf("BUTTONS: %x\n",d->btn);
-		DS4_hsl(d,(uint8_t)((double)(t/1000)/1000*255),255,255);
+		d->fr=(d->ry>20?d->ry*2:0);
+		d->sr=(d->ly>20?d->ly*2:0);
+		DS4_hsl(d,(uint8_t)((double)(t/1000)/20),255,255);
 	}
 	DS4_close(d);
 	DS4_cleanup();

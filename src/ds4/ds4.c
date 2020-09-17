@@ -5,47 +5,32 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
-#pragma comment(lib,"Setupapi.lib")
+#pragma comment(lib,"setupapi.lib")
 
 
 
 struct _HIDD_ATTRIBUTES{
-	ULONG Size;
-	uint16_t VendorID;
-	uint16_t ProductID;
-	uint16_t VersionNumber;
+	unsigned long sz;
+	uint16_t vid;
+	uint16_t pid;
+	uint16_t _;
 };
 struct _HIDP_CAPS{
-	uint16_t Usage;
-	uint16_t UsagePage;
-	uint16_t InputReportByteLength;
-	uint16_t OutputReportByteLength;
-	uint16_t FeatureReportByteLength;
-	uint16_t Reserved[17];
-	uint16_t fields_not_used_by_hidapi[10];
+	uint32_t _;
+	uint16_t il;
+	uint16_t ol;
+	uint64_t __[7];
 };
-typedef int (__stdcall *HidD_GetAttributes_)(HANDLE d,struct _HIDD_ATTRIBUTES* a);
-typedef int (__stdcall *HidD_GetSerialNumberString_)(HANDLE d,void* bf,unsigned long bfl);
-typedef int (__stdcall *HidD_GetManufacturerString_)(HANDLE h,void* bf,unsigned long bfl);
-typedef int (__stdcall *HidD_GetProductString_)(HANDLE h,void* bf,unsigned long bfl);
-typedef int (__stdcall *HidD_SetFeature_)(HANDLE h,void* dt,unsigned long l);
-typedef int (__stdcall *HidD_GetFeature_)(HANDLE h,void* dt,unsigned long l);
-typedef int (__stdcall *HidD_GetIndexedString_)(HANDLE h,unsigned long si,void* bf,unsigned long bfl);
-typedef int (__stdcall *HidD_GetPreparsedData_)(HANDLE h,void* dt);
-typedef int (__stdcall *HidD_FreePreparsedData_)(void* dt);
-typedef NTSTATUS (__stdcall *HidP_GetCaps_)(void* dt,struct _HIDP_CAPS *c);
-typedef int (__stdcall *HidD_SetNumInputBuffers_)(HANDLE h,unsigned long n_bf);
-static HidD_GetAttributes_ HidD_GetAttributes;
-static HidD_GetSerialNumberString_ HidD_GetSerialNumberString;
-static HidD_GetManufacturerString_ HidD_GetManufacturerString;
-static HidD_GetProductString_ HidD_GetProductString;
-static HidD_SetFeature_ HidD_SetFeature;
-static HidD_GetFeature_ HidD_GetFeature;
-static HidD_GetIndexedString_ HidD_GetIndexedString;
-static HidD_GetPreparsedData_ HidD_GetPreparsedData;
-static HidD_FreePreparsedData_ HidD_FreePreparsedData;
-static HidP_GetCaps_ HidP_GetCaps;
-static HidD_SetNumInputBuffers_ HidD_SetNumInputBuffers;
+typedef int (__stdcall *_HidD_GetAttributes_f)(HANDLE d,struct _HIDD_ATTRIBUTES* a);
+typedef int (__stdcall *_HidD_GetPreparsedData_f)(HANDLE h,void* dt);
+typedef int (__stdcall *_HidD_FreePreparsedData_f)(void* dt);
+typedef NTSTATUS (__stdcall *_HidP_GetCaps_f)(void* dt,struct _HIDP_CAPS *c);
+typedef int (__stdcall *_HidD_SetNumInputBuffers_f)(HANDLE h,unsigned long n_bf);
+static _HidD_GetAttributes_f _HidD_GetAttributes;
+static _HidD_GetPreparsedData_f _HidD_GetPreparsedData;
+static _HidD_FreePreparsedData_f _HidD_FreePreparsedData;
+static _HidP_GetCaps_f _HidP_GetCaps;
+static _HidD_SetNumInputBuffers_f _HidD_SetNumInputBuffers;
 bool _ds4_i=false;
 HMODULE _hlib_h=NULL;
 
@@ -55,14 +40,8 @@ void DS4_init(void){
 	if (_ds4_i==false){
 		_hlib_h=LoadLibraryA("hid.dll");
 		assert(_hlib_h!=NULL);
-#define RESOLVE(x) x=(x##_)GetProcAddress(_hlib_h,#x);assert(x!=NULL);
+#define RESOLVE(x) _##x=(_##x##_f)GetProcAddress(_hlib_h,#x);assert(_##x!=NULL);
 		RESOLVE(HidD_GetAttributes);
-		RESOLVE(HidD_GetSerialNumberString);
-		RESOLVE(HidD_GetManufacturerString);
-		RESOLVE(HidD_GetProductString);
-		RESOLVE(HidD_SetFeature);
-		RESOLVE(HidD_GetFeature);
-		RESOLVE(HidD_GetIndexedString);
 		RESOLVE(HidD_GetPreparsedData);
 		RESOLVE(HidD_FreePreparsedData);
 		RESOLVE(HidP_GetCaps);
@@ -166,9 +145,9 @@ struct DS4DeviceList* DS4_find_all(void){
 			if (j!=UINT32_MAX){
 				fh=CreateFileA(d_ddt->DevicePath,0,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_FLAG_OVERLAPPED,0);
 				if (fh!=INVALID_HANDLE_VALUE){
-					d_a.Size=sizeof(struct _HIDD_ATTRIBUTES);
-					HidD_GetAttributes(fh,&d_a);
-					if (d_a.VendorID==0x054c&&(d_a.ProductID==0x05c4||d_a.ProductID==0x09cc)){
+					d_a.sz=sizeof(struct _HIDD_ATTRIBUTES);
+					_HidD_GetAttributes(fh,&d_a);
+					if (d_a.vid==0x054c&&(d_a.pid==0x05c4||d_a.pid==0x09cc)){
 						struct DS4DeviceList* tmp=malloc(sizeof(struct DS4DeviceList));
 						tmp->p=malloc(1);
 						size_t ln=0;
@@ -241,30 +220,12 @@ struct DS4Device* DS4_connect(char* p){
 	o->_o.hEvent=CreateEvent(NULL,false,false,NULL);
 	o->_lt.QuadPart=0;
 	o->_tf.QuadPart=0;
-	// o->_cb0=0;
-	// o->_cn0=0;
-	// o->_cd0=0;
-	// o->_cb1=0;
-	// o->_cn1=0;
-	// o->_cd1=0;
-	// o->_cb2=0;
-	// o->_cn2=0;
-	// o->_cd2=0;
-	// o->_cb3=0;
-	// o->_cn3=0;
-	// o->_cd3=0;
-	// o->_cb4=0;
-	// o->_cn4=0;
-	// o->_cd4=0;
-	// o->_cb5=0;
-	// o->_cn5=0;
-	// o->_cd5=0;
 	if (o->_fh==INVALID_HANDLE_VALUE){
 		CloseHandle(o->_o.hEvent);
 		free(o);
 		return NULL;
 	}
-	int r=HidD_SetNumInputBuffers(o->_fh,64);
+	int r=_HidD_SetNumInputBuffers(o->_fh,64);
 	if (r==0){
 		CloseHandle(o->_o.hEvent);
 		CloseHandle(o->_fh);
@@ -272,7 +233,7 @@ struct DS4Device* DS4_connect(char* p){
 		return NULL;
 	}
 	void* d_pdt=NULL;
-	r=HidD_GetPreparsedData(o->_fh,&d_pdt);
+	r=_HidD_GetPreparsedData(o->_fh,&d_pdt);
 	if (r==0){
 		CloseHandle(o->_o.hEvent);
 		CloseHandle(o->_fh);
@@ -280,16 +241,16 @@ struct DS4Device* DS4_connect(char* p){
 		return NULL;
 	}
 	struct _HIDP_CAPS d_c;
-	uint32_t nt_r=HidP_GetCaps(d_pdt,&d_c);
-	HidD_FreePreparsedData(d_pdt);
+	uint32_t nt_r=_HidP_GetCaps(d_pdt,&d_c);
+	_HidD_FreePreparsedData(d_pdt);
 	if (nt_r!=0x110000){
 		CloseHandle(o->_o.hEvent);
 		CloseHandle(o->_fh);
 		free(o);
 		return NULL;
 	}
-	assert(d_c.InputReportByteLength==64);
-	assert(d_c.OutputReportByteLength==32);
+	assert(d_c.il==64);
+	assert(d_c.ol==32);
 	o->_ib=malloc(64);
 	for (uint16_t i=0;i<64;i++){
 		*(o->_ib+i)=0;
