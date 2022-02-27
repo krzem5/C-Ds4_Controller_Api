@@ -351,7 +351,7 @@ void DS4_update(struct DS4Device* d){
 		d->ly=127-*(d->_ib+2);
 		d->rx=-128+*(d->_ib+3);
 		d->ry=127-*(d->_ib+4);
-		d->bt=(uint8_t)(((*(d->_ib+30))&16)*15.9375);
+		d->bt=(uint8_t)(((*(d->_ib+30))&15)*15.9375);
 	}
 }
 

@@ -64,8 +64,8 @@ struct DS4Device{
 	uint8_t fon;
 	uint8_t foff;
 	HANDLE _fh;
-	char* _ib;
-	char* _ob;
+	unsigned char* _ib;
+	unsigned char* _ob;
 	uint8_t _f;
 	uint64_t _uc;
 	OVERLAPPED _o;
